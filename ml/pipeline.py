@@ -269,6 +269,8 @@ class DependencyAwareTradingPipeline(nn.Module):
         except TypeError:
             checkpoint = torch.load(path, map_location="cpu")
         config = checkpoint["config"]
+        if not torch.cuda.is_available():
+            config.device = "cpu"
         
         pipeline = cls(config)
         # Dummy initialization to create modules
@@ -285,7 +287,7 @@ class DependencyAwareTradingPipeline(nn.Module):
                 feature_stds=torch.ones(checkpoint["feature_dim"]),
             )
             pipeline.initialize_modules(dummy_mt)
-            pipeline.load_state_dict(checkpoint["state_dict"])
+            pipeline.load_state_dict(checkpoint["state_dict"], strict=False)
         
         print(f"Pipeline loaded from {path}")
         return pipeline
@@ -400,10 +402,10 @@ class DependencyAwareTradingPipeline(nn.Module):
         from ml.modules.module5_output import ForecastingOutput, PortfolioOutput
         if all_forecasts:
             cat_forecasts = torch.cat(all_forecasts, dim=0)
-            merged_outputs = {"output": ForecastingOutput(forecasts=cat_forecasts, uncertainty=None)}
+            merged_outputs = {"output": ForecastingOutput(forecasts=cat_forecasts, forecast_confidence=torch.ones(cat_forecasts.shape[0], cat_forecasts.shape[1], cat_forecasts.shape[2]))}
         elif all_weights:
             cat_weights = torch.cat(all_weights, dim=0)
-            merged_outputs = {"output": PortfolioOutput(weights=cat_weights)}
+            merged_outputs = {"output": PortfolioOutput(weights=cat_weights, logits=cat_weights, confidence=torch.ones(cat_weights.shape[0], cat_weights.shape[1]), validity_mask_applied=True)}
         else:
             merged_outputs = out_b
             

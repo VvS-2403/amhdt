@@ -338,7 +338,7 @@ class SequenceTrainer:
             except TypeError:
                 checkpoint = torch.load(self.best_checkpoint_path, map_location=self.device)
             self.pipeline.load_state_dict(checkpoint["state_dict"])
-            print(f"✓ Loaded best model from {self.best_checkpoint_path} (val_loss: {checkpoint.get('val_loss', 0):.4f})")
+            print(f"[OK] Loaded best model from {self.best_checkpoint_path} (val_loss: {checkpoint.get('val_loss', 0):.4f})")
             
         # Final comprehensive evaluation on both Train (80%) and Test (20%)
         print("\nEvaluating final model on 80% Train set and 20% Test set...")
@@ -354,7 +354,7 @@ class SequenceTrainer:
     
     def _construct_return_to_go(self, future_returns: torch.Tensor, T: int) -> torch.Tensor:
         """Construct return-to-go from future returns."""
-        # Shape: (batch, N, horizon) → (batch, N, T, 1)
+        # Shape: (batch, N, horizon) -> (batch, N, T, 1)
         # For simplicity, use sum of future returns
         rtg = future_returns.sum(dim=-1, keepdim=True).unsqueeze(-1)  # (batch, N, 1, 1)
         rtg = rtg.expand(-1, -1, T, -1)
@@ -363,7 +363,7 @@ class SequenceTrainer:
     def _check_leakage(self, X, M, Y, n_train, n_val):
         """Check for temporal leakage in train/val/test split."""
         # Timestamps should be strictly increasing
-        print("✓ Chronological split applied (no future leakage)")
+        print("[OK] Chronological split applied (no future leakage)")
     
     def _save_checkpoint(self, epoch: int, val_loss: float, save_name: Optional[str] = None):
         """Save best checkpoint."""
